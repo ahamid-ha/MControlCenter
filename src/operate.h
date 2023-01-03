@@ -36,6 +36,7 @@ enum class user_mode {
     balanced_mode,
     silent_mode,
     super_battery_mode,
+    extreme_mode,
     unknown_mode
 };
 
@@ -82,6 +83,8 @@ public:
     void setFnSuperSwapState(bool enabled) const;
     void setCoolerBoostState(bool enabled) const;
     void setUserMode(user_mode userMode) const;
+
+    void setFanAdvancedMode() const;
 
     [[nodiscard]] int getValue(int address) const;
     void setValue(int address, int value) const;

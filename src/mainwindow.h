@@ -67,6 +67,7 @@ private:
     void setBalancedBattery();
     void setBestBattery();
 
+    void setExtremePerformanceMode();
     void setHighPerformanceMode();
     void setBalancedMode();
     void setSilentMode();
@@ -92,6 +93,7 @@ private:
     QAction *coolerBoostAction = nullptr;
 
     QAction *highPerformanceMode = nullptr;
+    QAction *extremePerformanceMode = nullptr;
     QAction *balancedMode = nullptr;
     QAction *silentMode = nullptr;
     QAction *superBatteryMode = nullptr;
@@ -126,6 +128,7 @@ private slots:
     void on_keyboardBacklightModeComboBox_currentIndexChanged(int index) const;
 
     void on_highPerformanceModeRadioButton_toggled(bool checked);
+    void on_extremePerformanceModeRadioButton_toggled(bool checked);
     void on_balancedModeRadioButton_toggled(bool checked);
     void on_silentModeRadioButton_toggled(bool checked);
     void on_superBatteryModeRadioButton_toggled(bool checked);

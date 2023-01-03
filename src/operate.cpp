@@ -66,14 +66,14 @@ const int shiftModeAddress = 0xD2;
 const int shiftMode0 = 0xC0;
 const int shiftMode1 = 0xC1;
 const int shiftMode2 = 0xC2;
+const int shiftMode4 = 0xC4;
 
 int fanModeAddress;
 const int fanModeAddress_0xD4 = 0xD4;
 const int fanModeAddress_0xF4 = 0xF4;
 const int fanModeAuto = 0x0D;
 const int fanModeSilent = 0x1D;
-const int fanModeBasic = 0x4D;
-const int fanModeAdvanced = 0x8D;
+const int fanModeAdvanced = 0x4D;
 
 const int superBatteryModeAddress = 0xEB;
 
@@ -151,15 +151,17 @@ int Operate::getGpuTemp() const {
 
 int Operate::getFan1Speed() const {
     int value = helper.getValue(fan1Address);
+    value += helper.getValue(fan1Address - 1) << 8;
     if (value > 0)
-        return 470000 / value;
+        return 478000 / value;
     return value;
 }
 
 int Operate::getFan2Speed() const {
     int value = helper.getValue(fan2Address);
+    value += helper.getValue(fan2Address - 1) << 8;
     if (value > 0)
-        return 470000 / value;
+        return 478000 / value;
     return value;
 }
 
@@ -213,6 +215,8 @@ user_mode Operate::getUserMode() const {
     switch (helper.getValue(shiftModeAddress)) {
         case shiftMode0:
             return user_mode::performance_mode;
+        case shiftMode4:
+            return user_mode::extreme_mode;
         case shiftMode1:
             if (helper.getValue(fanModeAddress) == fanModeSilent)
                 return user_mode::silent_mode;
@@ -230,8 +234,6 @@ fan_mode Operate::getFanMode() const {
             return fan_mode::auto_fan_mode;
         case fanModeSilent:
             return fan_mode::silent_fan_mode;
-        case fanModeBasic:
-            return fan_mode::basic_fan_mode;
         case fanModeAdvanced:
             return fan_mode::advanced_fan_mode;
         default:
@@ -304,32 +306,67 @@ void Operate::setCoolerBoostState(bool enabled) const {
 void Operate::setUserMode(user_mode userMode) const {
     switch (userMode) {
         case user_mode::balanced_mode:
+            printf("balanced_mode\n");
             helper.putValue(shiftModeAddress, shiftMode1);
             helper.putValue(fanModeAddress, fanModeAuto);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "balanced_mode");
             break;
         case user_mode::performance_mode:
+            printf("performance_mode\n");
             helper.putValue(shiftModeAddress, shiftMode0);
             helper.putValue(fanModeAddress, fanModeAuto);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "performance_mode");
             break;
+        case user_mode::extreme_mode:
+            printf("extreme_mode\n");
+            // helper.putValue(shiftModeAddress, shiftMode0);
+            // helper.putValue(fanModeAddress, fanModeAuto);
+            setFanAdvancedMode();
+            putSuperBatteryModeValue(false);
+            Settings::setValue(settingsGroup + "UserMode", "extreme_mode");
+            break;
         case user_mode::silent_mode:
+            printf("silent_mode\n");
             helper.putValue(shiftModeAddress, shiftMode1);
             helper.putValue(fanModeAddress, fanModeSilent);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "silent_mode");
             break;
         case user_mode::super_battery_mode:
+            printf("super_battery_mode\n");
             helper.putValue(shiftModeAddress, shiftMode2);
             helper.putValue(fanModeAddress, fanModeAuto);
             putSuperBatteryModeValue(true);
             Settings::setValue(settingsGroup + "UserMode", "super_battery_mode");
             break;
         default:
+            printf("mode none\n");
             break;
     }
+}
+
+void Operate::setFanAdvancedMode() const {
+    setCoolerBoostState(false);
+    helper.putValue(shiftModeAddress, shiftMode4);
+    helper.putValue(fanModeAddress_0xD4, fanModeAdvanced);
+
+    // cpu
+    helper.putValue(0x72, 0);
+    helper.putValue(0x73, 10);
+    helper.putValue(0x74, 25);
+    helper.putValue(0x75, 30);
+    helper.putValue(0x76, 50);
+    helper.putValue(0x77, 80);
+
+    // gpu
+    helper.putValue(0x8A, 0);
+    helper.putValue(0x8B, 10);
+    helper.putValue(0x8C, 25);
+    helper.putValue(0x8D, 30);
+    helper.putValue(0x8E, 50);
+    helper.putValue(0x8F, 80);
 }
 
 int Operate::getValue(int address) const {
@@ -370,6 +407,8 @@ void Operate::loadSettings() const {
             setUserMode(user_mode::balanced_mode);
         else if (value == "performance_mode")
             setUserMode(user_mode::performance_mode);
+        else if (value == "extreme_mode")
+            setUserMode(user_mode::extreme_mode);
         else if (value == "silent_mode")
             setUserMode(user_mode::silent_mode);
         else if (value == "super_battery_mode")
@@ -410,7 +449,6 @@ int Operate::detectFanModeAddress() const {
     if (int fanModeValue = helper.getValue(fanModeAddress_0xD4);
             fanModeValue == fanModeAuto ||
             fanModeValue == fanModeSilent ||
-            fanModeValue == fanModeBasic ||
             fanModeValue == fanModeAdvanced)
         return fanModeAddress_0xD4;
     return fanModeAddress_0xF4;

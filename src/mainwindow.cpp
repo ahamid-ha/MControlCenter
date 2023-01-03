@@ -265,6 +265,9 @@ void MainWindow::updateUserMode() {
             case user_mode::performance_mode:
                 ui->highPerformanceModeRadioButton->click();
                 break;
+            case user_mode::extreme_mode:
+                ui->extremePerformanceModeRadioButton->click();
+                break;
             case user_mode::silent_mode:
                 ui->silentModeRadioButton->click();
                 break;
@@ -319,6 +322,11 @@ void MainWindow::setBestBattery() {
 
 void MainWindow::setHighPerformanceMode() {
     operate.setUserMode(user_mode::performance_mode);
+    updateUserMode();
+}
+
+void MainWindow::setExtremePerformanceMode() {
+    operate.setUserMode(user_mode::extreme_mode);
     updateUserMode();
 }
 
@@ -441,6 +449,11 @@ void MainWindow::on_highPerformanceModeRadioButton_toggled(bool checked) {
         setHighPerformanceMode();
 }
 
+void MainWindow::on_extremePerformanceModeRadioButton_toggled(bool checked) {
+    if (checked)
+        setExtremePerformanceMode();
+}
+
 void MainWindow::on_balancedModeRadioButton_toggled(bool checked) {
     if (checked)
         setBalancedMode();
@@ -472,6 +485,7 @@ void MainWindow::createTrayIcon() {
     createActions();
 
     modeTrayMenu = new QMenu(tr("Mode"));
+    modeTrayMenu->addAction(extremePerformanceMode);
     modeTrayMenu->addAction(highPerformanceMode);
     modeTrayMenu->addAction(balancedMode);
     modeTrayMenu->addAction(silentMode);
@@ -509,11 +523,13 @@ void MainWindow::createActions() {
     connect(restoreAction, &QAction::triggered, this, &MainWindow::showNormal);
 
     highPerformanceMode = new QAction(ui->highPerformanceModeRadioButton->text(), this);
+    extremePerformanceMode = new QAction(ui->extremePerformanceModeRadioButton->text(), this);
     balancedMode = new QAction(ui->balancedModeRadioButton->text(), this);
     silentMode = new QAction(ui->silentModeRadioButton->text(), this);
     superBatteryMode = new QAction(ui->superBatteryModeRadioButton->text(), this);
 
     connect(highPerformanceMode, &QAction::triggered, this, &MainWindow::setHighPerformanceMode);
+    connect(extremePerformanceMode, &QAction::triggered, this, &MainWindow::setExtremePerformanceMode);
     connect(balancedMode, &QAction::triggered, this, &MainWindow::setBalancedMode);
     connect(silentMode, &QAction::triggered, this, &MainWindow::setSilentMode);
     connect(superBatteryMode, &QAction::triggered, this, &MainWindow::setSuperBatteryMode);
