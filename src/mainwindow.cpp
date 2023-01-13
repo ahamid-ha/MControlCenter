@@ -22,6 +22,7 @@
 #include "settings.h"
 #include <QTimer>
 #include <QMessageBox>
+#include <QDBusConnection>
 
 Operate operate;
 
@@ -53,6 +54,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(realtimeUpdateTimer, &QTimer::timeout, this, &MainWindow::realtimeUpdate);
     setUpdateInterval(1000);
+
+    QDBusConnection::systemBus().connect(QString(), QString(), "org.freedesktop.login1.Manager", "PrepareForSleep",
+                                         this, SLOT(sleepSlot(bool)));
 }
 
 MainWindow::~MainWindow() {
@@ -553,4 +557,12 @@ void MainWindow::createActions() {
 
 void MainWindow::saveStateRequest(QSessionManager &sessionManager) {
     sessionManager.setRestartHint(QSessionManager::RestartNever);
+}
+
+void MainWindow::sleepSlot(bool start)
+{
+    if (!start) {
+        // Refresh the settings after resume from speed
+        loadConfigs();
+    }
 }

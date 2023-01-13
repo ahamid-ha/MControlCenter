@@ -132,5 +132,6 @@ private slots:
     void on_balancedModeRadioButton_toggled(bool checked);
     void on_silentModeRadioButton_toggled(bool checked);
     void on_superBatteryModeRadioButton_toggled(bool checked);
+    void sleepSlot(bool start);
 };
 #endif // MAINWINDOW_H
