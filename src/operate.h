@@ -21,6 +21,7 @@
 
 
 #include <string>
+#include <QString>
 
 enum class charging_state {
     battery_charging,
@@ -46,6 +47,20 @@ enum class fan_mode {
     basic_fan_mode,
     advanced_fan_mode,
     unknown_fan_mode
+};
+
+const int speedsControlCount = 7;
+struct FanSpeedProfile {
+    int speeds[speedsControlCount];
+
+    void load(const QString &speedsStr);
+};
+
+struct FansSpeedProfile {
+    FanSpeedProfile cpu;
+    FanSpeedProfile gpu;
+
+    void load(const QString &speedsStr);
 };
 
 class Operate {
@@ -84,7 +99,7 @@ public:
     void setCoolerBoostState(bool enabled) const;
     void setUserMode(user_mode userMode) const;
 
-    void setFanAdvancedMode() const;
+    void setFanSpeedProfile(const QString &profileName) const;
 
     [[nodiscard]] int getValue(int address) const;
     void setValue(int address, int value) const;

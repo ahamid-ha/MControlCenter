@@ -77,6 +77,15 @@ const int fanModeAdvanced = 0x4D;
 
 const int superBatteryModeAddress = 0xEB;
 
+const struct FansSpeedProfile defaultFansSpeedProfile = {
+    .cpu = {0x00, 0x28, 0x30, 0x38, 0x40, 0x48, 0x54},
+    .gpu = {0x00, 0x31, 0x3A, 0x43, 0x4C, 0x55, 0x55}
+};
+const int cpuFanStartAddress = 0x72;
+const int gpuFanStartAddress = 0x8A;
+const QString defaultfanSpeedName = "Default";
+const QString customfanSpeedName = "Custom";
+
 const QString settingsGroup = "Settings/";
 
 Operate::Operate() = default;
@@ -309,6 +318,7 @@ void Operate::setUserMode(user_mode userMode) const {
             printf("balanced_mode\n");
             helper.putValue(shiftModeAddress, shiftMode1);
             helper.putValue(fanModeAddress, fanModeAuto);
+            setFanSpeedProfile(defaultfanSpeedName);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "balanced_mode");
             break;
@@ -316,14 +326,16 @@ void Operate::setUserMode(user_mode userMode) const {
             printf("performance_mode\n");
             helper.putValue(shiftModeAddress, shiftMode0);
             helper.putValue(fanModeAddress, fanModeAuto);
+            setFanSpeedProfile(defaultfanSpeedName);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "performance_mode");
             break;
         case user_mode::extreme_mode:
             printf("extreme_mode\n");
-            // helper.putValue(shiftModeAddress, shiftMode0);
-            // helper.putValue(fanModeAddress, fanModeAuto);
-            setFanAdvancedMode();
+            setCoolerBoostState(false);
+            helper.putValue(shiftModeAddress, shiftMode4);
+            helper.putValue(fanModeAddress_0xD4, fanModeAdvanced);
+            setFanSpeedProfile(customfanSpeedName);
             putSuperBatteryModeValue(false);
             Settings::setValue(settingsGroup + "UserMode", "extreme_mode");
             break;
@@ -332,12 +344,14 @@ void Operate::setUserMode(user_mode userMode) const {
             helper.putValue(shiftModeAddress, shiftMode1);
             helper.putValue(fanModeAddress, fanModeSilent);
             putSuperBatteryModeValue(false);
+            setFanSpeedProfile(defaultfanSpeedName);
             Settings::setValue(settingsGroup + "UserMode", "silent_mode");
             break;
         case user_mode::super_battery_mode:
             printf("super_battery_mode\n");
             helper.putValue(shiftModeAddress, shiftMode2);
             helper.putValue(fanModeAddress, fanModeAuto);
+            setFanSpeedProfile(defaultfanSpeedName);
             putSuperBatteryModeValue(true);
             Settings::setValue(settingsGroup + "UserMode", "super_battery_mode");
             break;
@@ -347,26 +361,21 @@ void Operate::setUserMode(user_mode userMode) const {
     }
 }
 
-void Operate::setFanAdvancedMode() const {
-    setCoolerBoostState(false);
-    helper.putValue(shiftModeAddress, shiftMode4);
-    helper.putValue(fanModeAddress_0xD4, fanModeAdvanced);
+void Operate::setFanSpeedProfile(const QString &profileName) const {
+    Settings s;
+    auto speeds = defaultFansSpeedProfile;
+    auto settingsPath = settingsGroup + "FansProfiles_" + profileName;
+    if (s.isValueExist(settingsPath)) {
+        QString speeds_text = s.getValue(settingsPath).toString();
+        speeds.load(speeds_text);
+    }
 
-    // cpu
-    helper.putValue(0x72, 0);
-    helper.putValue(0x73, 10);
-    helper.putValue(0x74, 25);
-    helper.putValue(0x75, 30);
-    helper.putValue(0x76, 50);
-    helper.putValue(0x77, 80);
-
-    // gpu
-    helper.putValue(0x8A, 0);
-    helper.putValue(0x8B, 10);
-    helper.putValue(0x8C, 25);
-    helper.putValue(0x8D, 30);
-    helper.putValue(0x8E, 50);
-    helper.putValue(0x8F, 80);
+    for (int i = 0; i < speedsControlCount; ++i) {
+        printf("fan cpu %d %d\n", i, speeds.cpu.speeds[i]);
+        printf("fan gpu %d %d\n", i, speeds.gpu.speeds[i]);
+        helper.putValue(cpuFanStartAddress + i, speeds.cpu.speeds[i]);
+        helper.putValue(gpuFanStartAddress + i, speeds.gpu.speeds[i]);
+    }
 }
 
 int Operate::getValue(int address) const {
@@ -452,4 +461,33 @@ int Operate::detectFanModeAddress() const {
             fanModeValue == fanModeAdvanced)
         return fanModeAddress_0xD4;
     return fanModeAddress_0xF4;
+}
+
+void FanSpeedProfile::load(const QString &speedsStr) {
+    QStringList speedsList = speedsStr.split(u',');
+    for (qsizetype i = 0; i < speedsList.size() && i < speedsControlCount; ++i) {
+        bool ok;
+        int value = speedsList[i].trimmed().toInt(&ok, 0);
+        if (ok) {
+            speeds[i] = value;
+        } else {
+            printf("Invalid fan speed%s\n", qPrintable(speedsList[i]));
+            break;
+        }
+    }
+}
+
+/*
+    Parses a string into cpu and gpu fan speeds
+    The format is:
+        cpu0,cpu1,...|gpu0,gpu1,...
+*/
+void FansSpeedProfile::load(const QString &speedsStr) {
+    QStringList speedsList = speedsStr.split(u'|');
+    if (speedsList.size() != 2) {
+        printf("Invalid fan speed%s\n", qPrintable(speedsStr));
+        return;
+    }
+    cpu.load(speedsList[0]);
+    gpu.load(speedsList[1]);
 }
