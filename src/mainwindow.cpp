@@ -426,15 +426,19 @@ void MainWindow::updateUserMode() {
         switch (operate.getUserMode()) {
             case user_mode::balanced_mode:
                 ui->balancedModeRadioButton->click();
+                balancedMode->setChecked(true);
                 break;
             case user_mode::performance_mode:
                 ui->highPerformanceModeRadioButton->click();
+                highPerformanceMode->setChecked(true);
                 break;
             case user_mode::silent_mode:
                 ui->silentModeRadioButton->click();
+                silentMode->setChecked(true);
                 break;
             case user_mode::super_battery_mode:
                 ui->superBatteryModeRadioButton->click();
+                superBatteryMode->setChecked(true);
                 break;
             case user_mode::unknown_mode:
                 //fall to default, happens on some models after booting
@@ -788,6 +792,15 @@ void MainWindow::createTrayIcon() {
     createActions();
 
     modeTrayMenu = new QMenu(tr("Mode"));
+    modeTrayActions = new QActionGroup(this);
+    modeTrayActions->setExclusive(true);
+
+
+    modeTrayActions->addAction(highPerformanceMode);
+    modeTrayActions->addAction(balancedMode);
+    modeTrayActions->addAction(silentMode);
+    modeTrayActions->addAction(superBatteryMode);
+
     modeTrayMenu->addAction(highPerformanceMode);
     modeTrayMenu->addAction(balancedMode);
     modeTrayMenu->addAction(silentMode);
@@ -826,9 +839,16 @@ void MainWindow::createActions() {
     connect(restoreAction, &QAction::triggered, this, &MainWindow::showNormal);
 
     highPerformanceMode = new QAction(ui->highPerformanceModeRadioButton->text(), this);
+    highPerformanceMode->setCheckable(true);
+
     balancedMode = new QAction(ui->balancedModeRadioButton->text(), this);
+    balancedMode->setCheckable(true);
+
     silentMode = new QAction(ui->silentModeRadioButton->text(), this);
+    silentMode->setCheckable(true);
+
     superBatteryMode = new QAction(ui->superBatteryModeRadioButton->text(), this);
+    superBatteryMode->setCheckable(true);
 
     connect(highPerformanceMode, &QAction::triggered, this, &MainWindow::setHighPerformanceMode);
     connect(balancedMode, &QAction::triggered, this, &MainWindow::setBalancedMode);
