@@ -780,7 +780,11 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason) {
     switch (reason) {
         case QSystemTrayIcon::Trigger:
         case QSystemTrayIcon::DoubleClick:
-            MainWindow::showNormal();
+            if (!MainWindow::isHidden()) {
+                MainWindow::close();
+            } else {
+                MainWindow::showNormal();
+            }
             break;
         case QSystemTrayIcon::MiddleClick:
             break;
