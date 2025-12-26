@@ -106,6 +106,7 @@ private:
 
     QAction *coolerBoostAction = nullptr;
 
+    QActionGroup *modeTrayActions = nullptr;
     QAction *highPerformanceMode = nullptr;
     QAction *balancedMode = nullptr;
     QAction *silentMode = nullptr;
