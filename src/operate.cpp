@@ -544,13 +544,13 @@ void Operate::loadSettings() const {
         setUsbPowerShareState(s.getValue(settingsGroup + "UsbPowerShare").toBool());
 
     if (s.isValueExist(settingsGroup + "fan1SpeedSettings"))
-    setFan1SpeedSettings(s.getValueVector(settingsGroup + "fan1SpeedSettings"));
+        setFan1SpeedSettings(s.getValueVector(settingsGroup + "fan1SpeedSettings"));
     if (s.isValueExist(settingsGroup + "fan2SpeedSettings"))
-    setFan2SpeedSettings(s.getValueVector(settingsGroup + "fan2SpeedSettings"));
+        setFan2SpeedSettings(s.getValueVector(settingsGroup + "fan2SpeedSettings"));
     if (s.isValueExist(settingsGroup + "fan1TempSettings"))
-    setFan1TempSettings(s.getValueVector(settingsGroup + "fan1TempSettings"));
+        setFan1TempSettings(s.getValueVector(settingsGroup + "fan1TempSettings"));
     if (s.isValueExist(settingsGroup + "fan2TempSettings"))
-    setFan2TempSettings(s.getValueVector(settingsGroup + "fan2TempSettings"));
+        setFan2TempSettings(s.getValueVector(settingsGroup + "fan2TempSettings"));
     if (s.isValueExist(settingsGroup + "fanModeAdvanced"))
         setFanModeAdvanced(s.getValue(settingsGroup + "fanModeAdvanced").toBool());
 }
